@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Saved Form Data</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      width: 400px;
+      padding: 10px;
+    }
+    h1 {
+      font-size: 16px;
+    }
+    #data-container {
+      margin-top: 10px;
+    }
+    .data-item {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .data-item h2 {
+      font-size: 12px;
+      margin-top: 0;
+      word-wrap: break-word;
+    }
+    pre {
+      background-color: #f4f4f4;
+      padding: 5px;
+      border-radius: 3px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    #clear-button {
+        width: 100%;
+        padding: 8px;
+        background-color: #f44336;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    .fill-button {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Saved Form Data</h1>
+  <button id="clear-button">Clear All Data</button>
+  <div id="data-container"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
