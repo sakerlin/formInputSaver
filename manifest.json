@@ -5,6 +5,7 @@
   "description": "Saves form inputs after submission upon user confirmation.",
   "permissions": [
     "storage",
+    "contextMenus",
     "tabs"
   ],
   "background": {
