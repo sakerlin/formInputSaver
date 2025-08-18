@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lists = {
     sites: document.getElementById('sites-list'),
     snapshots: document.getElementById('snapshots-list'),
-    blocked: document.getElementById('blocked-sites-list'),
+    whitelisted: document.getElementById('whitelisted-sites-list'),
   };
   const title = document.getElementById('view-title');
   const backButton = document.getElementById('back-button');
@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const emptyState = document.getElementById('empty-state');
   const exportButton = document.getElementById('export-data-button');
   const importInput = document.getElementById('import-file-input');
+  const addWhitelistInput = document.getElementById('add-whitelist-input');
+  const addWhitelistButton = document.getElementById('add-whitelist-button');
 
   let currentHostname = null;
   let allData = {};
@@ -98,21 +100,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderSettings() {
-    const blockedSites = allData.blockedSites || [];
-    lists.blocked.innerHTML = '';
-    if (blockedSites.length > 0) {
-      blockedSites.forEach(site => {
+    const whitelistedSites = allData.whitelistedSites || [];
+    lists.whitelisted.innerHTML = '';
+    if (whitelistedSites.length > 0) {
+      whitelistedSites.forEach(site => {
         const li = document.createElement('li');
         li.textContent = site;
         const removeBtn = document.createElement('button');
         removeBtn.className = 'delete-btn';
         removeBtn.textContent = '移除';
-        removeBtn.onclick = () => removeBlockedSite(site);
+        removeBtn.onclick = () => removeWhitelistedSite(site);
         li.appendChild(removeBtn);
-        lists.blocked.appendChild(li);
+        lists.whitelisted.appendChild(li);
       });
     } else {
-      lists.blocked.innerHTML = '<li>沒有已封鎖的網站。</li>';
+      lists.whitelisted.innerHTML = '<li>沒有已允許的網站。</li>';
     }
   }
 
@@ -134,14 +136,35 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function removeBlockedSite(site) {
-    allData.blockedSites = (allData.blockedSites || []).filter(s => s !== site);
-    chrome.storage.local.set({ blockedSites: allData.blockedSites }, renderSettings);
+  function addWhitelistedSite() {
+    const site = addWhitelistInput.value.trim();
+    if (site) {
+      try {
+        const url = new URL(`http://${site}`); // Validate as hostname
+        const hostname = url.hostname;
+        if (!allData.whitelistedSites.includes(hostname)) {
+          allData.whitelistedSites.push(hostname);
+          chrome.storage.local.set({ whitelistedSites: allData.whitelistedSites }, () => {
+            addWhitelistInput.value = '';
+            renderSettings();
+          });
+        } else {
+          alert('此網站已在白名單中。');
+        }
+      } catch (e) {
+        alert('請輸入有效的網址 (例如: example.com)。');
+      }
+    }
+  }
+
+  function removeWhitelistedSite(site) {
+    allData.whitelistedSites = (allData.whitelistedSites || []).filter(s => s !== site);
+    chrome.storage.local.set({ whitelistedSites: allData.whitelistedSites }, renderSettings);
   }
 
   function exportData() {
-    chrome.storage.local.get(['savedForms', 'blockedSites'], (data) => {
-      if (!data.savedForms && !data.blockedSites) {
+    chrome.storage.local.get(['savedForms', 'whitelistedSites'], (data) => {
+      if (!data.savedForms && !data.whitelistedSites) {
         alert('沒有資料可匯出。');
         return;
       }
@@ -175,9 +198,9 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        chrome.storage.local.get(['savedForms', 'blockedSites'], (existingData) => {
+        chrome.storage.local.get(['savedForms', 'whitelistedSites'], (existingData) => {
           const mergedForms = existingData.savedForms || {};
-          const mergedBlocked = new Set(existingData.blockedSites || []);
+          const mergedWhitelisted = new Set(existingData.whitelistedSites || []);
 
           // Merge savedForms
           if (importedData.savedForms) {
@@ -192,18 +215,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
 
-          // Merge blockedSites
-          if (importedData.blockedSites) {
-            importedData.blockedSites.forEach(site => mergedBlocked.add(site));
+          // Merge whitelistedSites
+          if (importedData.whitelistedSites) {
+            importedData.whitelistedSites.forEach(site => mergedWhitelisted.add(site));
           }
 
           chrome.storage.local.set({
             savedForms: mergedForms,
-            blockedSites: Array.from(mergedBlocked)
+            whitelistedSites: Array.from(mergedWhitelisted)
           }, () => {
             alert('資料匯入成功！');
             // Refresh all data and view
-            chrome.storage.local.get(['savedForms', 'blockedSites'], (result) => {
+            chrome.storage.local.get(['savedForms', 'whitelistedSites'], (result) => {
               allData = result;
               switchView('settings');
             });
@@ -233,6 +256,12 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   exportButton.onclick = exportData;
   importInput.onchange = importData;
+  addWhitelistButton.onclick = addWhitelistedSite;
+  addWhitelistInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      addWhitelistedSite();
+    }
+  });
 
   // --- Initial Load ---
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -242,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (e) { /* Ignore invalid URLs */ }
     }
 
-    chrome.storage.local.get(['savedForms', 'blockedSites'], (result) => {
+    chrome.storage.local.get(['savedForms', 'whitelistedSites'], (result) => {
       allData = result;
       if (currentHostname && result.savedForms && result.savedForms[currentHostname]) {
         switchView('snapshots', currentHostname);
