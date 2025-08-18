@@ -173,12 +173,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function addWhitelistedSite(siteToAdd) {
     const site = siteToAdd || addWhitelistInput.value.trim();
-    console.log('Attempting to add site:', site);
     if (site) {
       // Basic hostname validation (e.g., contains at least one dot, no spaces)
       // This is a simplified regex, a more robust one might be needed for edge cases
       const hostnameRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      console.log('Regex test result:', hostnameRegex.test(site));
       if (!hostnameRegex.test(site)) {
         alert("請輸入有效的網址 (例如: example.com)。");
         return;
@@ -186,20 +184,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Use the site directly as hostname, assuming it's already a valid hostname
       const hostname = site;
-      console.log('Hostname to add:', hostname);
 
       // Ensure allData.whitelistedSites is an array before checking includes
       allData.whitelistedSites = allData.whitelistedSites || [];
 
-      console.log('Is already in whitelist?', allData.whitelistedSites.includes(hostname));
-
       if (!allData.whitelistedSites.includes(hostname)) {
         allData.whitelistedSites.push(hostname);
-        console.log('Saving to storage:', allData.whitelistedSites);
         chrome.storage.local.set(
           { whitelistedSites: allData.whitelistedSites },
           () => {
-            console.log('Saved to storage. Calling renderSettings().');
             if (siteToAdd) { // If called from toggle, don't clear input or re-render settings
               renderSnapshotsList(hostname); // Re-render snapshots to update toggle state
             } else {
@@ -243,10 +236,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const blob = new Blob([jsonString], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
       a.href = url;
-      a.download = `form-input-saver-backup-${new Date()
-        .toISOString()
-        .slice(0, 10)}.json`;
+      a.download = `form-input-saver-backup-${timestamp}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
