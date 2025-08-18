@@ -15,12 +15,19 @@
 
   <div id="main-content">
     <!-- View for listing all sites -->
-    <div id="sites-list-view">
+    <div id="sites-list-view" class="hidden">
       <ul id="sites-list"></ul>
     </div>
 
     <!-- View for listing snapshots for a single site -->
-    <div id="snapshots-list-view" class="hidden">
+    <div id="snapshots-list-view">
+      <div class="toggle-container">
+        <label for="enable-toggle" class="toggle-label">啟用 formInputSaver</label>
+        <label class="switch">
+          <input type="checkbox" id="enable-toggle">
+          <span class="slider round"></span>
+        </label>
+      </div>
       <ul id="snapshots-list"></ul>
     </div>
 
