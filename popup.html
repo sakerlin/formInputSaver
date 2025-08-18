@@ -26,8 +26,13 @@
 
     <!-- View for settings -->
     <div id="settings-view" class="hidden">
-      <h2>已封鎖的網站</h2>
-      <ul id="blocked-sites-list"></ul>
+      <h2>已允許的網站 (Content Script Injection)</h2>
+      <p class="settings-note">只有在此列表中的網站，擴充功能才會注入內容腳本並提供表單儲存與填入功能。</p>
+      <ul id="whitelisted-sites-list"></ul>
+      <div class="settings-actions">
+        <input type="text" id="add-whitelist-input" placeholder="新增允許的網站 (e.g., example.com)">
+        <button id="add-whitelist-button">新增</button>
+      </div>
       <hr>
       <h2>資料管理</h2>
       <div class="settings-actions">

@@ -16,7 +16,6 @@ function injectModalCSS() {
     .form-saver-btn-save { background-color: #28a745; color: white; }
     .form-saver-btn-confirm { background-color: #007bff; color: white; }
     .form-saver-btn-ignore { background-color: #6c757d; color: white; }
-    .form-saver-btn-block { background-color: #dc3545; color: white; }
   `;
   const style = document.createElement('style');
   style.id = styleId;
@@ -118,41 +117,27 @@ document.addEventListener('submit', function(event) {
 
   const form = event.target;
   event.preventDefault();
-  const hostname = window.location.hostname;
 
-  chrome.storage.local.get(['blockedSites'], function(result) {
-    const blockedSites = result.blockedSites || [];
-    if (blockedSites.includes(hostname)) {
-      form.submit();
-      return;
-    }
+  const { modal, backdrop } = showModal(`
+    <h3>要儲存這次的表單資料嗎？</h3>
+    <button class="form-saver-btn-save">確定儲存</button>
+    <button class="form-saver-btn-ignore">現在不要</button>
+  `);
 
-    const { modal, backdrop } = showModal(`
-      <h3>要儲存這次的表單資料嗎？</h3>
-      <button class="form-saver-btn-save">確定儲存</button>
-      <button class="form-saver-btn-ignore">現在不要</button>
-      <button class="form-saver-btn-block">不要在這個網站上儲存</button>
-    `);
+  const cleanupAndSubmit = () => {
+    document.body.removeChild(backdrop);
+    form.dataset.formSaverHandled = 'true';
+    form.submit();
+  };
 
-    const cleanupAndSubmit = () => {
-      document.body.removeChild(backdrop);
+  modal.querySelector('.form-saver-btn-ignore').onclick = cleanupAndSubmit;
+  modal.querySelector('.form-saver-btn-save').onclick = () => {
+    document.body.removeChild(backdrop);
+    initiateSaveProcess(form, () => {
       form.dataset.formSaverHandled = 'true';
       form.submit();
-    };
-
-    modal.querySelector('.form-saver-btn-ignore').onclick = cleanupAndSubmit;
-    modal.querySelector('.form-saver-btn-block').onclick = () => {
-      const newBlockedSites = [...blockedSites, hostname];
-      chrome.storage.local.set({ blockedSites: newBlockedSites }, cleanupAndSubmit);
-    };
-    modal.querySelector('.form-saver-btn-save').onclick = () => {
-      document.body.removeChild(backdrop);
-      initiateSaveProcess(form, () => {
-        form.dataset.formSaverHandled = 'true';
-        form.submit();
-      });
-    };
-  });
+    });
+  };
 }, true);
 
 // Listener for messages from background script or popup
