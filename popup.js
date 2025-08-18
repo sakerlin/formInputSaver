@@ -139,20 +139,25 @@ document.addEventListener('DOMContentLoaded', () => {
   function addWhitelistedSite() {
     const site = addWhitelistInput.value.trim();
     if (site) {
-      try {
-        const url = new URL(`http://${site}`); // Validate as hostname
-        const hostname = url.hostname;
-        if (!allData.whitelistedSites.includes(hostname)) {
-          allData.whitelistedSites.push(hostname);
-          chrome.storage.local.set({ whitelistedSites: allData.whitelistedSites }, () => {
-            addWhitelistInput.value = '';
-            renderSettings();
-          });
-        } else {
-          alert('此網站已在白名單中。');
-        }
-      } catch (e) {
+      // Basic hostname validation (e.g., contains at least one dot, no spaces)
+      // This is a simplified regex, a more robust one might be needed for edge cases
+      const hostnameRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!hostnameRegex.test(site)) {
         alert('請輸入有效的網址 (例如: example.com)。');
+        return;
+      }
+
+      // Use the site directly as hostname, assuming it's already a valid hostname
+      const hostname = site;
+
+      if (!allData.whitelistedSites.includes(hostname)) {
+        allData.whitelistedSites.push(hostname);
+        chrome.storage.local.set({ whitelistedSites: allData.whitelistedSites }, () => {
+          addWhitelistInput.value = '';
+          renderSettings();
+        });
+      } else {
+        alert('此網站已在白名單中。');
       }
     }
   }
