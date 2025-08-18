@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsButton = document.getElementById('settings-button');
   const clearAllButton = document.getElementById('clear-all-data-button');
   const emptyState = document.getElementById('empty-state');
+  const exportButton = document.getElementById('export-data-button');
+  const importInput = document.getElementById('import-file-input');
 
   let currentHostname = null;
   let allData = {};
@@ -137,6 +139,87 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.local.set({ blockedSites: allData.blockedSites }, renderSettings);
   }
 
+  function exportData() {
+    chrome.storage.local.get(['savedForms', 'blockedSites'], (data) => {
+      if (!data.savedForms && !data.blockedSites) {
+        alert('沒有資料可匯出。');
+        return;
+      }
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `form-input-saver-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        
+        if (typeof importedData !== 'object' || importedData === null) {
+          throw new Error('無效的檔案格式。');
+        }
+
+        if (!confirm('確定要匯入資料嗎？匯入的資料將與現有資料合併。')) {
+          return;
+        }
+
+        chrome.storage.local.get(['savedForms', 'blockedSites'], (existingData) => {
+          const mergedForms = existingData.savedForms || {};
+          const mergedBlocked = new Set(existingData.blockedSites || []);
+
+          // Merge savedForms
+          if (importedData.savedForms) {
+            for (const host in importedData.savedForms) {
+              if (mergedForms[host]) {
+                const existingTimestamps = new Set(mergedForms[host].map(s => s.timestamp));
+                const newSnapshots = importedData.savedForms[host].filter(s => !existingTimestamps.has(s.timestamp));
+                mergedForms[host].push(...newSnapshots);
+              } else {
+                mergedForms[host] = importedData.savedForms[host];
+              }
+            }
+          }
+
+          // Merge blockedSites
+          if (importedData.blockedSites) {
+            importedData.blockedSites.forEach(site => mergedBlocked.add(site));
+          }
+
+          chrome.storage.local.set({
+            savedForms: mergedForms,
+            blockedSites: Array.from(mergedBlocked)
+          }, () => {
+            alert('資料匯入成功！');
+            // Refresh all data and view
+            chrome.storage.local.get(['savedForms', 'blockedSites'], (result) => {
+              allData = result;
+              switchView('settings');
+            });
+          });
+        });
+
+      } catch (error) {
+        alert(`匯入失敗：${error.message}`);
+      } finally {
+        // Reset file input so the same file can be selected again
+        importInput.value = '';
+      }
+    };
+    reader.readAsText(file);
+  }
+
   // --- Event Handlers ---
   backButton.onclick = () => switchView('sites');
   settingsButton.onclick = () => switchView('settings');
@@ -148,6 +231,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   };
+  exportButton.onclick = exportData;
+  importInput.onchange = importData;
 
   // --- Initial Load ---
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
