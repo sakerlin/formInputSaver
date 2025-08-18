@@ -27,10 +27,21 @@ document.addEventListener("DOMContentLoaded", () => {
   function switchView(viewName, context) {
     Object.values(views).forEach((v) => v.classList.add("hidden"));
     if (views[viewName]) views[viewName].classList.remove("hidden");
-    backButton.classList.toggle(
-      "visible",
-      viewName === "snapshots" || viewName === "settings"
-    );
+
+    // Control visibility of settingsButton and backButton
+    if (viewName === "settings") {
+      settingsButton.classList.add("hidden");
+      backButton.classList.remove("hidden");
+      backButton.classList.add("visible"); // Ensure it's visible
+    } else if (viewName === "sites") {
+      settingsButton.classList.remove("hidden");
+      backButton.classList.add("hidden");
+      backButton.classList.remove("visible");
+    } else { // snapshots view
+      settingsButton.classList.add("hidden");
+      backButton.classList.remove("hidden");
+      backButton.classList.add("visible");
+    }
 
     switch (viewName) {
       case "sites":
