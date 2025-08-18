@@ -42,6 +42,17 @@ function showModal(html, onRender) {
   document.body.appendChild(backdrop);
   if (onRender) onRender(modal);
   console.log('Modal shown. Backdrop:', backdrop);
+
+  // Add event listener to dismiss modal on backdrop click
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) {
+      console.log('Backdrop clicked, removing modal.');
+      if (backdrop.parentNode) {
+        backdrop.parentNode.removeChild(backdrop);
+      }
+    }
+  });
+
   return { modal, backdrop };
 }
 
