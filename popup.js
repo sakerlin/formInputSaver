@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const importInput = document.getElementById("import-file-input");
   const addWhitelistInput = document.getElementById("add-whitelist-input");
   const addWhitelistButton = document.getElementById("add-whitelist-button");
+  const enableToggle = document.getElementById("enable-toggle");
 
   let currentHostname = null;
   let allData = {};
@@ -82,8 +83,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderSnapshotsList(hostname) {
+    title.textContent = hostname; // Set title to current hostname
     const snapshots = allData.savedForms[hostname] || [];
     lists.snapshots.innerHTML = "";
+
+    // Render toggle switch state
+    if (enableToggle) {
+      allData.whitelistedSites = allData.whitelistedSites || [];
+      enableToggle.checked = allData.whitelistedSites.includes(hostname);
+    }
+
+    if (snapshots.length === 0) {
+      lists.snapshots.innerHTML = "<li>沒有已儲存的表單資料。</li>";
+      return;
+    }
+
     snapshots.sort((a, b) => b.timestamp - a.timestamp); // Newest first
 
     snapshots.forEach((snapshot) => {
@@ -157,8 +171,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function addWhitelistedSite() {
-    const site = addWhitelistInput.value.trim();
+  function addWhitelistedSite(siteToAdd) {
+    const site = siteToAdd || addWhitelistInput.value.trim();
     console.log('Attempting to add site:', site);
     if (site) {
       // Basic hostname validation (e.g., contains at least one dot, no spaces)
@@ -186,23 +200,36 @@ document.addEventListener("DOMContentLoaded", () => {
           { whitelistedSites: allData.whitelistedSites },
           () => {
             console.log('Saved to storage. Calling renderSettings().');
-            addWhitelistInput.value = "";
-            renderSettings();
+            if (siteToAdd) { // If called from toggle, don't clear input or re-render settings
+              renderSnapshotsList(hostname); // Re-render snapshots to update toggle state
+            } else {
+              addWhitelistInput.value = "";
+              renderSettings();
+            }
           }
         );
       } else {
-        alert("此網站已在白名單中。");
+        if (!siteToAdd) { // Only alert if not called from toggle
+          alert("此網站已在白名單中。");
+        }
       }
     }
   }
 
-  function removeWhitelistedSite(site) {
+  function removeWhitelistedSite(siteToRemove) {
+    const site = siteToRemove || addWhitelistInput.value.trim();
     allData.whitelistedSites = (allData.whitelistedSites || []).filter(
       (s) => s !== site
     );
     chrome.storage.local.set(
       { whitelistedSites: allData.whitelistedSites },
-      renderSettings
+      () => {
+        if (siteToRemove) { // If called from toggle
+          renderSnapshotsList(site); // Re-render snapshots to update toggle state
+        } else {
+          renderSettings();
+        }
+      }
     );
   }
 
@@ -325,6 +352,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Toggle switch event listener
+  if (enableToggle) {
+    enableToggle.onchange = () => {
+      if (enableToggle.checked) {
+        addWhitelistedSite(currentHostname);
+      } else {
+        removeWhitelistedSite(currentHostname);
+      }
+    };
+  }
+
   // --- Initial Load ---
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0] && tabs[0].url) {
@@ -337,13 +375,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     chrome.storage.local.get(["savedForms", "whitelistedSites"], (result) => {
       allData = result;
-      if (
-        currentHostname &&
-        result.savedForms &&
-        result.savedForms[currentHostname]
-      ) {
+      // Always start with snapshots view for the current hostname
+      if (currentHostname) {
         switchView("snapshots", currentHostname);
       } else {
+        // Fallback to sites list if no valid hostname
         switchView("sites");
       }
     });
