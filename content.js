@@ -24,6 +24,14 @@ function injectModalCSS() {
 }
 
 function showModal(html, onRender) {
+  // Remove any existing backdrops before showing a new one
+  const existingBackdrops = document.querySelectorAll('.form-saver-backdrop');
+  existingBackdrops.forEach(bd => {
+    if (bd.parentNode) {
+      bd.parentNode.removeChild(bd);
+    }
+  });
+
   injectModalCSS();
   const backdrop = document.createElement('div');
   backdrop.className = 'form-saver-backdrop';
@@ -33,6 +41,7 @@ function showModal(html, onRender) {
   backdrop.appendChild(modal);
   document.body.appendChild(backdrop);
   if (onRender) onRender(modal);
+  console.log('Modal shown. Backdrop:', backdrop);
   return { modal, backdrop };
 }
 
@@ -52,7 +61,10 @@ function initiateSaveProcess(form, onComplete) {
   const nameInput = modal.querySelector('#form-saver-name-input');
   nameInput.focus();
 
-  const cleanup = () => document.body.removeChild(backdrop);
+  const cleanup = () => {
+    console.log('Calling cleanup for naming modal. Backdrop:', backdrop);
+    document.body.removeChild(backdrop);
+  };
 
   modal.querySelector('.form-saver-btn-ignore').onclick = () => {
     cleanup();
@@ -108,6 +120,118 @@ function initiateSaveProcess(form, onComplete) {
     });
   };
 }
+
+// --- EVENT LISTENERS ---
+
+// Listener for form submission
+document.addEventListener('submit', function(event) {
+  if (event.target.tagName.toLowerCase() !== 'form' || event.target.dataset.formSaverHandled) return;
+
+  const form = event.target;
+  event.preventDefault();
+
+  const { modal, backdrop } = showModal(`
+    <h3>要儲存這次的表單資料嗎？</h3>
+    <button class="form-saver-btn-save">確定儲存</button>
+    <button class="form-saver-btn-ignore">現在不要</button>
+  `);
+
+  const cleanupAndSubmit = () => {
+    console.log('Calling cleanupAndSubmit for submission modal. Backdrop:', backdrop);
+    document.body.removeChild(backdrop);
+    form.dataset.formSaverHandled = 'true';
+    form.submit();
+  };
+
+  modal.querySelector('.form-saver-btn-ignore').onclick = cleanupAndSubmit;
+  modal.querySelector('.form-saver-btn-save').onclick = () => {
+    console.log('Saving from submission modal. Removing backdrop:', backdrop);
+    document.body.removeChild(backdrop);
+    initiateSaveProcess(form, () => {
+      form.dataset.formSaverHandled = 'true';
+      form.submit();
+    });
+  };
+}, true);
+
+// Listener for messages from background script or popup
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.action === "fill_form") {
+    const data = request.data;
+    const remainingKeys = new Set(Object.keys(data));
+    let attempts = 0;
+    const maxAttempts = 25; // 5 seconds total
+
+    function attemptToFill() {
+      for (const name of Array.from(remainingKeys)) {
+        const elements = document.querySelectorAll(`[name="${name}"], [id="${name}"]`); // Also check for ID
+
+        if (elements.length > 0) {
+          const value = data[name];
+          elements.forEach(element => {
+            const type = element.type;
+            if (type === 'radio') {
+              if (element.value === value) element.checked = true;
+            } else if (type === 'checkbox') {
+              element.checked = !!value;
+            } else {
+              element.value = value;
+            }
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            element.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+          remainingKeys.delete(name);
+        }
+      }
+    }
+
+    attemptToFill(); // Initial pass
+
+    if (remainingKeys.size > 0) {
+      const retryInterval = setInterval(() => {
+        attempts++;
+        attemptToFill();
+
+        if (remainingKeys.size === 0 || attempts >= maxAttempts) {
+          clearInterval(retryInterval);
+          if (remainingKeys.size > 0) {
+            console.warn('Form Saver: Could not fill all fields after 5 seconds:', Array.from(remainingKeys));
+          }
+        }
+      }, 200);
+    }
+
+    sendResponse({ status: "success" });
+    return; // Indicate synchronous response
+  }
+  
+  if (request.action === "manual_save_trigger") {
+    const forms = Array.from(document.querySelectorAll('form'));
+    if (forms.length === 0) {
+      alert('此頁面沒有找到任何表單。');
+    } else if (forms.length === 1) {
+      initiateSaveProcess(forms[0]);
+    } else {
+      // Multiple forms found, ask user to choose
+      let formListHTML = '<ul class="form-chooser-list">';
+      forms.forEach((f, index) => {
+        const formId = f.id ? `#${f.id}` : '';
+        const formAction = f.action ? ` (action: ${f.action.substring(f.action.lastIndexOf('/'))})` : '';
+        formListHTML += `<li data-index="${index}">表單 ${index + 1}${formId}${formAction}</li>`;
+      });
+      formListHTML += '</ul>';
+
+      const { modal, backdrop } = showModal(`<h3>請選擇要儲存的表單</h3>${formListHTML}`);
+      modal.querySelectorAll('.form-chooser-list li').forEach(li => {
+        li.onclick = () => {
+          console.log('Removing form chooser modal backdrop:', backdrop);
+          document.body.removeChild(backdrop);
+          initiateSaveProcess(selectedForm);
+        };
+      });
+    }
+  }
+});
 
 // --- EVENT LISTENERS ---
 
