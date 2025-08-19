@@ -19,13 +19,38 @@ ul { list-style: none; padding: 0; margin: 0; }
 .list-item .item-timestamp { font-size: 12px; color: #888; margin-left: 10px; }
 
 /* Action buttons for snapshots */
-.snapshot-actions button { padding: 5px 10px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; margin-left: 5px; }
+.snapshot-actions {
+  display: flex; /* Make it a flex container */
+  gap: 5px; /* Space between buttons */
+  align-items: center; /* Vertically align buttons */
+}
+
+.snapshot-actions button {
+  padding: 5px 8px; /* Slightly reduce padding to save space */
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  /* Removed margin-left: 5px; as gap handles spacing */
+}
+
+/* Specific style for delete button within snapshot-actions */
+.snapshot-actions .delete-btn {
+  width: 30px; /* Fixed width for circular delete button */
+  height: 30px; /* Fixed height for circular delete button */
+  border-radius: 50%; /* Make it circular */
+  padding: 0; /* Remove padding for circular button */
+  display: flex; /* Use flex to center content */
+  justify-content: center; /* Center content horizontally */
+  align-items: center; /* Center content vertically */
+}
+
 .fill-btn { background-color: #007bff; color: white; }
-.delete-btn { background-color: #dc3545; color: white; }
+.delete-btn { background-color: #dc3545; color: white; width: 30px; height: 30px; border-radius: 50%; padding: 0; display: flex; justify-content: center; align-items: center; font-size: 12px; }
 
 /* Settings View */
 #settings-view h2 { font-size: 15px; }
-#blocked-sites-list li { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
+#whitelisted-sites-list li { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; gap: 10px; }
 .danger-btn { width: 100%; padding: 10px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
 .settings-note { font-size: 12px; color: #888; text-align: center; margin-top: 5px; }
 
