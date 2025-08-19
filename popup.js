@@ -17,8 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const emptyState = document.getElementById("empty-state");
   const exportButton = document.getElementById("export-data-button");
   const importInput = document.getElementById("import-file-input");
-  const addWhitelistInput = document.getElementById("add-whitelist-input");
-  const addWhitelistButton = document.getElementById("add-whitelist-button");
+  
   const enableToggle = document.getElementById("enable-toggle");
 
   let currentHostname = null;
@@ -171,57 +170,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function addWhitelistedSite(siteToAdd) {
-    const site = siteToAdd || addWhitelistInput.value.trim();
-    if (site) {
-      // Basic hostname validation (e.g., contains at least one dot, no spaces)
-      // This is a simplified regex, a more robust one might be needed for edge cases
-      const hostnameRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      if (!hostnameRegex.test(site)) {
-        alert("請輸入有效的網址 (例如: example.com)。");
-        return;
-      }
+  function addWhitelistedSite(site) {
+    if (!site) return; // Ensure site is not null/undefined
 
-      // Use the site directly as hostname, assuming it's already a valid hostname
-      const hostname = site;
+    // Basic hostname validation (e.g., contains at least one dot, no spaces)
+    // This is a simplified regex, a more robust one might be needed for edge cases
+    const hostnameRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!hostnameRegex.test(site)) {
+      alert("請輸入有效的網址 (例如: example.com)。");
+      return;
+    }
 
-      // Ensure allData.whitelistedSites is an array before checking includes
-      allData.whitelistedSites = allData.whitelistedSites || [];
+    const hostname = site;
 
-      if (!allData.whitelistedSites.includes(hostname)) {
-        allData.whitelistedSites.push(hostname);
-        chrome.storage.local.set(
-          { whitelistedSites: allData.whitelistedSites },
-          () => {
-            if (siteToAdd) { // If called from toggle, don't clear input or re-render settings
-              renderSnapshotsList(hostname); // Re-render snapshots to update toggle state
-            } else {
-              addWhitelistInput.value = "";
-              renderSettings();
-            }
-          }
-        );
-      } else {
-        if (!siteToAdd) { // Only alert if not called from toggle
-          alert("此網站已在白名單中。");
+    // Ensure allData.whitelistedSites is an array before checking includes
+    allData.whitelistedSites = allData.whitelistedSites || [];
+
+    if (!allData.whitelistedSites.includes(hostname)) {
+      allData.whitelistedSites.push(hostname);
+      chrome.storage.local.set(
+        { whitelistedSites: allData.whitelistedSites },
+        () => {
+          renderSnapshotsList(hostname); // Re-render snapshots to update toggle state
         }
-      }
+      );
+    } else {
+      // If already in whitelist, and called from toggle, do nothing.
+      // If called from manual input (which is now removed), it would have alerted.
     }
   }
 
-  function removeWhitelistedSite(siteToRemove) {
-    const site = siteToRemove || addWhitelistInput.value.trim();
+  function removeWhitelistedSite(site) {
+    if (!site) return; // Ensure site is not null/undefined
+
     allData.whitelistedSites = (allData.whitelistedSites || []).filter(
       (s) => s !== site
     );
     chrome.storage.local.set(
       { whitelistedSites: allData.whitelistedSites },
       () => {
-        if (siteToRemove) { // If called from toggle
-          renderSnapshotsList(site); // Re-render snapshots to update toggle state
-        } else {
-          renderSettings();
-        }
+        renderSnapshotsList(site); // Re-render snapshots to update toggle state
       }
     );
   }
@@ -344,12 +332,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   exportButton.onclick = exportData;
   importInput.onchange = importData;
-  addWhitelistButton.onclick = addWhitelistedSite;
-  addWhitelistInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      addWhitelistedSite();
-    }
-  });
 
   // Toggle switch event listener
   if (enableToggle) {
