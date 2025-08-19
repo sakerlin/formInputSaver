@@ -3,7 +3,7 @@ body { font-family: sans-serif; width: 480px; padding: 0; margin: 0; color: #333
 
 #header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: #f7f7f7; border-bottom: 1px solid #ddd; }
 #header h1 { font-size: 16px; margin: 0; text-align: center; flex-grow: 1; }
-.header-btn { background: none; border: 1px solid #ccc; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+.header-btn { background: none; border: 1px solid #ccc; padding: 4px 8px; border-radius: 8px; cursor: pointer; font-size: 14px; }
 .header-btn#back-button { visibility: hidden; }
 .header-btn#back-button.visible { visibility: visible; }
 
@@ -13,13 +13,14 @@ body { font-family: sans-serif; width: 480px; padding: 0; margin: 0; color: #333
 ul { list-style: none; padding: 0; margin: 0; }
 
 /* List items for sites and snapshots */
-.list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 8px; border-bottom: 1px solid #eee; cursor: pointer; transition: background-color 0.2s; }
+.list-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; cursor: pointer; transition: background-color 0.2s; }
 .list-item:hover { background-color: #f0f0f0; }
 .list-item .item-name { font-size: 15px; flex-grow: 1; }
 .list-item .item-timestamp { font-size: 12px; color: #888; margin-left: 10px; }
-
+.list-item + .list-item { margin-top: 10px; } /* Space between list items */
 /* Action buttons for snapshots */
 .snapshot-actions {
+  margin-left: 10px;
   display: flex; /* Make it a flex container */
   gap: 5px; /* Space between buttons */
   align-items: center; /* Vertically align buttons */
@@ -29,16 +30,15 @@ ul { list-style: none; padding: 0; margin: 0; }
   padding: 5px 8px; /* Slightly reduce padding to save space */
   font-size: 12px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  width: 50px;
+  height: 30px;
   /* Removed margin-left: 5px; as gap handles spacing */
 }
 
 /* Specific style for delete button within snapshot-actions */
 .snapshot-actions .delete-btn {
-  width: 30px; /* Fixed width for circular delete button */
-  height: 30px; /* Fixed height for circular delete button */
-  border-radius: 50%; /* Make it circular */
   padding: 0; /* Remove padding for circular button */
   display: flex; /* Use flex to center content */
   justify-content: center; /* Center content horizontally */
@@ -46,17 +46,17 @@ ul { list-style: none; padding: 0; margin: 0; }
 }
 
 .fill-btn { background-color: #007bff; color: white; }
-.delete-btn { background-color: #dc3545; color: white; border-radius: 4px; }
+.delete-btn { background-color: #dc3545; color: white; border-radius: 8px; }
 
 /* Settings View */
 #settings-view h2 { font-size: 15px; }
-#whitelisted-sites-list li { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; gap: 10px; }
-.danger-btn { width: 100%; padding: 10px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+#whitelisted-sites-list li { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; gap: 10px; border-bottom: none; }
+.danger-btn { width: 100%; padding: 10px; background-color: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
 .settings-note { font-size: 12px; color: #888; text-align: center; margin-top: 5px; }
 
 /* Settings View Actions */
 .settings-actions { display: flex; gap: 10px; margin: 15px 0; }
-.settings-actions button, .button-like-label { flex-grow: 1; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: center; font-size: 14px; }
+.settings-actions button, .button-like-label { flex-grow: 1; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; text-align: center; font-size: 14px; }
 .button-like-label { background-color: #28a745; }
 .settings-actions button:hover, .button-like-label:hover { opacity: 0.9; }
 
