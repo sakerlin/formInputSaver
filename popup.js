@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   // --- DOM Elements ---
   const views = {
-    sites: document.getElementById("sites-list-view"),
     snapshots: document.getElementById("snapshots-list-view"),
     settings: document.getElementById("settings-view"),
   };
@@ -32,22 +31,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (viewName === "settings") {
       settingsButton.classList.add("hidden");
       backButton.classList.remove("hidden");
-      backButton.classList.add("visible"); // Ensure it's visible
-    } else if (viewName === "sites") {
+      backButton.classList.add("visible");
+    } else { // snapshots view
       settingsButton.classList.remove("hidden");
       backButton.classList.add("hidden");
       backButton.classList.remove("visible");
-    } else { // snapshots view
-      settingsButton.classList.add("hidden");
-      backButton.classList.remove("hidden");
-      backButton.classList.add("visible");
     }
 
     switch (viewName) {
-      case "sites":
-        title.textContent = "已存資料的網站";
-        renderSitesList();
-        break;
       case "snapshots":
         title.textContent = context; // context is hostname
         renderSnapshotsList(context);
@@ -55,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
       case "settings":
         title.textContent = "設定";
         renderSettings();
+        renderSitesList();
         break;
     }
   }
@@ -66,11 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
     lists.sites.innerHTML = "";
 
     if (hostnames.length === 0) {
-      emptyState.classList.remove("hidden");
-      views.sites.classList.add("hidden");
+      lists.sites.innerHTML = "<li>沒有任何網站資料。</li>";
       return;
     }
-    emptyState.classList.add("hidden");
 
     hostnames.forEach((hostname) => {
       const li = document.createElement("li");
@@ -119,6 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
             chrome.tabs.sendMessage(tabs[0].id, {
               action: "fill_form",
               data: snapshot.data,
+              selectors: snapshot.selectors || [],
             });
           }
         });
@@ -161,12 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
       delete allData.savedForms[hostname];
     }
     chrome.storage.local.set({ savedForms: allData.savedForms }, () => {
-      // If no sites left, go to main view, else refresh current view
-      if (Object.keys(allData.savedForms).length === 0) {
-        switchView("sites");
-      } else {
-        renderSnapshotsList(hostname);
-      }
+      renderSnapshotsList(hostname);
     });
   }
 
@@ -320,13 +306,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Event Handlers ---
-  backButton.onclick = () => switchView("sites");
+  backButton.onclick = () => {
+    if (currentHostname) {
+      switchView("snapshots", currentHostname);
+    } else {
+      switchView("settings");
+    }
+  };
   settingsButton.onclick = () => switchView("settings");
   clearAllButton.onclick = () => {
     if (confirm("確定要刪除所有儲存的表單資料嗎？此操作無法復原。")) {
       chrome.storage.local.remove("savedForms", () => {
         allData.savedForms = {};
-        switchView("sites");
+        // 清空資料後，停留在 snapshots 並顯示空列表
+        switchView("snapshots", currentHostname);
       });
     }
   };
@@ -360,8 +353,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (currentHostname) {
         switchView("snapshots", currentHostname);
       } else {
-        // Fallback to sites list if no valid hostname
-        switchView("sites");
+        // Fallback to settings if no valid hostname
+        switchView("settings");
       }
     });
   });
