@@ -46,7 +46,7 @@ ul { list-style: none; padding: 0; margin: 0; }
 }
 
 .fill-btn { background-color: #007bff; color: white; }
-.delete-btn { background-color: #dc3545; color: white; }
+.delete-btn { background-color: #dc3545; color: white; border-radius: 4px; }
 
 /* Settings View */
 #settings-view h2 { font-size: 15px; }
