@@ -1,50 +1,70 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8">
-  <title>表單儲存紀錄</title>
-  <link rel="stylesheet" href="popup.css">
-</head>
-<body>
-
-  <div id="header">
-    <button id="back-button" class="header-btn hidden">&larr; 返回</button>
-    <h1 id="view-title">已存資料的網站</h1>
-    <button id="settings-button" class="header-btn">⚙</button>
-  </div>
-
-  <div id="main-content">
-    <!-- View for listing all sites -->
-    <div id="sites-list-view">
-      <ul id="sites-list"></ul>
+  <head>
+    <meta charset="UTF-8" />
+    <title>表單儲存紀錄</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div id="header">
+      <div id="back-button" class="header-btn hidden">返回</div>
+      <h1 id="view-title">已存資料的網站</h1>
+      <div id="settings-button" class="header-btn"></div>
     </div>
 
-    <!-- View for listing snapshots for a single site -->
-    <div id="snapshots-list-view" class="hidden">
-      <ul id="snapshots-list"></ul>
-    </div>
-
-    <!-- View for settings -->
-    <div id="settings-view" class="hidden">
-      <h2>已封鎖的網站</h2>
-      <ul id="blocked-sites-list"></ul>
-      <hr>
-      <h2>資料管理</h2>
-      <div class="settings-actions">
-        <button id="export-data-button">匯出資料</button>
-        <label for="import-file-input" class="button-like-label">匯入資料</label>
-        <input type="file" id="import-file-input" accept=".json" style="display: none;">
+    <div id="main-content">
+      <!-- View for listing all sites -->
+      <div id="sites-list-view" class="hidden">
+        <ul id="sites-list"></ul>
       </div>
-      <hr>
-      <button id="clear-all-data-button" class="danger-btn">清除所有已存表單</button>
-      <p class="settings-note">注意：此操作無法復原。</p>
+
+      <!-- View for listing snapshots for a single site -->
+      <div id="snapshots-list-view">
+        <div class="toggle-container">
+          <label for="enable-toggle" class="toggle-label"
+            >啟用 formInputSaver</label
+          >
+          <label class="switch">
+            <input type="checkbox" id="enable-toggle" />
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <ul id="snapshots-list"></ul>
+      </div>
+
+      <!-- View for settings -->
+      <div id="settings-view" class="hidden">
+        <h2>已允許的網站</h2>
+        <ul id="whitelisted-sites-list"></ul>
+        <p class="settings-note">
+          只有在此列表中的網站，擴充功能才會注入內容腳本並提供表單儲存與填入功能。
+        </p>
+        <hr />
+        <h2>資料管理</h2>
+        <div class="settings-actions">
+          <button id="export-data-button">匯出資料</button>
+          <label for="import-file-input" class="button-like-label"
+            >匯入資料</label
+          >
+          <input
+            type="file"
+            id="import-file-input"
+            accept=".json"
+            style="display: none"
+          />
+        </div>
+        <hr />
+        <button id="clear-all-data-button" class="danger-btn">
+          清除所有已存表單
+        </button>
+        <p class="settings-note">注意：此操作無法復原。</p>
+      </div>
     </div>
-  </div>
 
-  <div id="empty-state" class="hidden">
-    <p>尚未儲存任何網站的表單資料。</p>
-  </div>
+    <div id="empty-state" class="hidden">
+      <p>尚未儲存任何網站的表單資料。</p>
+    </div>
 
-  <script src="popup.js"></script>
-</body>
+    <script src="popup.js"></script>
+  </body>
 </html>
