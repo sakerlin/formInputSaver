@@ -3,7 +3,7 @@ body { font-family: sans-serif; width: 480px; padding: 0; margin: 0; color: #333
 
 #header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: #f7f7f7; border-bottom: 1px solid #ddd; }
 #header h1 { font-size: 16px; margin: 0; text-align: center; flex-grow: 1; }
-.header-btn { background: none; border: 1px solid #ccc; padding: 4px 8px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+.header-btn { background: none; border: 1px solid #ccc; padding: 4px 8px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
 .header-btn#back-button { visibility: hidden; }
 .header-btn#back-button.visible { visibility: visible; }
 
